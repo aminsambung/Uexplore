@@ -1,0 +1,24 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="105dp"
+    android:layout_margin="5dp"
+    android:layout_columnWeight="1"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/bg_category">
+
+    <TextView
+        android:id="@+id/categoryIcon"
+        android:text="📁"
+        android:textSize="30sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/categoryName"
+        android:text="Files"
+        android:textStyle="bold"
+        android:textColor="@color/ux_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</LinearLayout>

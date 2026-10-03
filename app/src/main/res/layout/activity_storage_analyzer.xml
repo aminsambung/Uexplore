@@ -1,0 +1,23 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/ux_bg">
+
+    <TextView
+        android:text="Storage Analyzer"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@color/ux_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/storageSummary"
+        android:textSize="18sp"
+        android:layout_marginTop="30dp"
+        android:textColor="@color/ux_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</LinearLayout>

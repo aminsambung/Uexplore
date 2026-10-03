@@ -1,0 +1,143 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/ux_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Uxplore"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/ux_text"/>
+
+        <ImageButton
+            android:id="@+id/btnSearch"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_search"
+            android:background="@android:color/transparent"
+            android:contentDescription="Search"/>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:id="@+id/storageCard"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:padding="20dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card">
+
+                <TextView
+                    android:text="Internal Storage"
+                    android:textStyle="bold"
+                    android:textSize="17sp"
+                    android:textColor="@color/ux_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <ProgressBar
+                    android:id="@+id/storageProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:layout_marginTop="18dp"
+                    android:max="100"
+                    android:progress="68"/>
+
+                <TextView
+                    android:id="@+id/storageText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Calculating storage..."
+                    android:textColor="@color/ux_muted"/>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:text="Categories"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:textColor="@color/ux_text"/>
+
+            <GridLayout
+                android:id="@+id/categoryGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="3"
+                android:rowCount="2"
+                android:layout_marginTop="12dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:text="Recent Files"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:textColor="@color/ux_text"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fileRecycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:layout_marginTop="10dp"/>
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:gravity="center"
+        android:background="@color/ux_surface">
+
+        <TextView
+            android:text="⌂\nHome"
+            android:gravity="center"
+            android:textColor="@color/ux_blue"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/btnBrowse"
+            android:text="▣\nBrowse"
+            android:gravity="center"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/btnFavorites"
+            android:text="★\nFavorites"
+            android:gravity="center"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+</LinearLayout>

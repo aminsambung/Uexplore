@@ -1,0 +1,52 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/ux_bg">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/previewToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:title="Preview"
+        android:background="@color/ux_bg"/>
+
+    <ImageView
+        android:id="@+id/previewImage"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scaleType="fitCenter"
+        android:background="#111827"
+        android:contentDescription="Image preview"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:background="@color/ux_surface">
+
+        <TextView
+            android:id="@+id/previewName"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/ux_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/previewInfo"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/ux_muted"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/btnWallpaper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Set as Wallpaper"/>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,9 @@
+<resources>
+    <color name="ux_blue">#2563EB</color>
+    <color name="ux_blue_dark">#1D4ED8</color>
+    <color name="ux_bg">#F6F8FC</color>
+    <color name="ux_surface">#FFFFFF</color>
+    <color name="ux_text">#172033</color>
+    <color name="ux_muted">#718096</color>
+    <color name="ux_border">#E6EAF0</color>
+</resources>

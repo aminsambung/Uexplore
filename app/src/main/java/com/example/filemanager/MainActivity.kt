@@ -1,4 +1,4 @@
-package com.example.uxplore // ⚠️ SESUAIKAN DENGAN NAMA PACKAGE ANDA
+package com.example.filemanager // ⚠️ SESUAIKAN DENGAN NAMA PACKAGE ANDA
 
 import android.Manifest
 import android.content.Intent
@@ -373,7 +373,7 @@ class GalleryAdapter(
 }
 
 // ================== FUNGSI UTILITAS ==================
-private fun formatFileSize(size: Long): String {
+fun formatFileSize(size: Long): String {
     if (size <= 0) return "0 B"
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
     val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()

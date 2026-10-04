@@ -15,9 +15,9 @@ class FileListAdapter(
 ) : RecyclerView.Adapter<FileListAdapter.Holder>() {
 
     class Holder(v: View) : RecyclerView.ViewHolder(v) {
-        val icon: TextView = v.findViewById(R.id.fileIcon)
-        val name: TextView = v.findViewById(R.id.fileName)
-        val info: TextView = v.findViewById(R.id.fileInfo)
+        val icon: ImageView = view.findViewById(R.id.ivIcon)
+        val name: TextView = view.findViewById(R.id.tvName)
+        val options: ImageView = view.findViewById(R.id.btnOptions)
         val more: ImageButton = v.findViewById(R.id.fileMore)
     }
 

@@ -12,7 +12,6 @@ import java.io.File
 class SearchActivity : AppCompatActivity() {
     private lateinit var recycler: RecyclerView
     private lateinit var empty: TextView
-    private lateinit var adapter: FileListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,9 +21,7 @@ class SearchActivity : AppCompatActivity() {
         recycler = findViewById(R.id.searchRecycler)
         empty = findViewById(R.id.emptyText)
 
-        adapter = FileListAdapter(emptyList(), {}, { _, _ -> })
         recycler.layoutManager = LinearLayoutManager(this)
-        recycler.adapter = adapter
 
         input.requestFocus()
         input.setOnEditorActionListener { _, _, _ ->
@@ -35,18 +32,35 @@ class SearchActivity : AppCompatActivity() {
 
     private fun search(query: String) {
         if (query.isBlank()) return
-        val results = mutableListOf<FileItem>()
+
+        // Cari file, hasilnya langsung berupa List<File>
+        val results = mutableListOf<File>()
         walk(Environment.getExternalStorageDirectory(), query.lowercase(), results, 0)
-        adapter.submit(results.take(100))
+
+        // Buat adapter baru dengan hasil pencarian
+        val adapter = FileListAdapter(
+            items = results.take(100),
+            onClick = { file ->
+                // Aksi saat file diklik (bisa disesuaikan)
+            },
+            onMore = { file, anchor ->
+                // Aksi saat titik tiga diklik
+            }
+        )
+        recycler.adapter = adapter
+
         empty.text = if (results.isEmpty()) "No files found" else "${results.size} result(s)"
     }
 
-    private fun walk(dir: File, query: String, out: MutableList<FileItem>, depth: Int) {
+    private fun walk(dir: File, query: String, out: MutableList<File>, depth: Int) {
         if (depth > 6 || out.size >= 100) return
         val children = dir.listFiles() ?: return
         for (f in children) {
+            // Lewati file/folder tersembunyi
+            if (f.name.startsWith(".")) continue
+
             if (f.name.lowercase().contains(query)) {
-                out.add(FileItem(f.name, f.absolutePath, if (f.isFile) f.length() else 0, f.isDirectory))
+                out.add(f) // Langsung tambahkan File, bukan FileItem
             }
             if (f.isDirectory && !f.isHidden) walk(f, query, out, depth + 1)
         }

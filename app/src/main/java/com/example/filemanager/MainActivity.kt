@@ -12,7 +12,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,15 +25,12 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import java.io.File
 import java.text.DecimalFormat
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
     // Variabel untuk Halaman Penyimpanan Internal
     private lateinit var rvFiles: RecyclerView
-    private lateinit var fileAdapter: FileAdapter
+    private lateinit var fileAdapter: FileListAdapter
     private val fileList = mutableListOf<File>()
     private var currentPath: String = Environment.getExternalStorageDirectory().absolutePath
 
@@ -62,9 +58,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // ⚠️ PILIH SALAH SATU SKENARIO DI BAWAH INI:
-        
+
         // --- SKENARIO 1: PENYIMPANAN INTERNAL (Sesuai Gambar Anda) ---
         setContentView(R.layout.activity_main)
         initStorageViews()
@@ -87,16 +83,22 @@ class MainActivity : AppCompatActivity() {
     // ================== INISIALISASI TAMPILAN ==================
 
     private fun initStorageViews() {
-        rvFiles = findViewById(R.id.rvFiles) // Pastikan ID ini ada di layout activity_main.xml
+        rvFiles = findViewById(R.id.rvFiles)
         rvFiles.layoutManager = LinearLayoutManager(this)
-        fileAdapter = FileAdapter(fileList) { file ->
-            if (file.isDirectory) {
-                currentPath = file.absolutePath
-                loadFiles(currentPath)
-            } else {
-                Toast.makeText(this, "File: ${file.name}", Toast.LENGTH_SHORT).show()
+        fileAdapter = FileListAdapter(
+            items = fileList,
+            onClick = { file ->
+                if (file.isDirectory) {
+                    currentPath = file.absolutePath
+                    loadFiles(currentPath)
+                } else {
+                    Toast.makeText(this, "File: ${file.name}", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onMore = { file, view ->
+                Toast.makeText(this, "Opsi: ${file.name}", Toast.LENGTH_SHORT).show()
             }
-        }
+        )
         rvFiles.adapter = fileAdapter
     }
 
@@ -146,15 +148,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitialData() {
-        // ⚠️ AKTIFKAN SESUAI SKENARIO YANG DIPILIH DI ATAS
-        
-        // Jika Skenario 1 (Penyimpanan Internal):
+        // Aktifkan sesuai skenario
         loadFiles(currentPath)
-        
-        // Jika Skenario 2 (Video):
         // loadVideos()
-        
-        // Jika Skenario 3 (Gambar):
         // loadImages()
     }
 
@@ -167,12 +163,11 @@ class MainActivity : AppCompatActivity() {
             fileList.clear()
 
             if (files != null) {
-                // Filter folder dan file, serta abaikan yang diawali titik (.)
                 val folders = files.filter { it.isDirectory && !it.name.startsWith(".") }
                     .sortedBy { it.name.lowercase() }
                 val normalFiles = files.filter { it.isFile && !it.name.startsWith(".") }
                     .sortedBy { it.name.lowercase() }
-                
+
                 fileList.addAll(folders)
                 fileList.addAll(normalFiles)
             }
@@ -195,14 +190,10 @@ class MainActivity : AppCompatActivity() {
             val files = dir.listFiles() ?: return
             for (file in files) {
                 if (file.isDirectory) {
-                    if (!file.name.startsWith(".")) {
-                        searchVideos(file)
-                    }
+                    if (!file.name.startsWith(".")) searchVideos(file)
                 } else {
                     if (extensions.any { file.extension.equals(it, ignoreCase = true) }) {
-                        if (!file.name.startsWith(".")) {
-                            videoList.add(file)
-                        }
+                        if (!file.name.startsWith(".")) videoList.add(file)
                     }
                 }
             }
@@ -222,14 +213,10 @@ class MainActivity : AppCompatActivity() {
             val files = dir.listFiles() ?: return
             for (file in files) {
                 if (file.isDirectory) {
-                    if (!file.name.startsWith(".")) {
-                        searchImages(file)
-                    }
+                    if (!file.name.startsWith(".")) searchImages(file)
                 } else {
                     if (extensions.any { file.extension.equals(it, ignoreCase = true) }) {
-                        if (!file.name.startsWith(".")) {
-                            imageList.add(file)
-                        }
+                        if (!file.name.startsWith(".")) imageList.add(file)
                     }
                 }
             }
@@ -250,62 +237,6 @@ class MainActivity : AppCompatActivity() {
             super.onBackPressed()
         }
     }
-}
-
-// ================== ADAPTER: FILE (PENYIMPANAN INTERNAL) ==================
-class FileAdapter(
-    private val files: List<File>,
-    private val onClick: (File) -> Unit
-) : RecyclerView.Adapter<FileAdapter.FileViewHolder>() {
-
-    class FileViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val icon: ImageView = view.findViewById(R.id.ivIcon)
-        val name: TextView = view.findViewById(R.id.tvName)
-        val date: TextView = view.findViewById(R.id.tvDate)
-        val options: ImageView = view.findViewById(R.id.btnOptions)
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_file, parent, false)
-        return FileViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
-        val file = files[position]
-        holder.name.text = file.name
-
-        val sdf = SimpleDateFormat("dd MMM", Locale("id", "ID"))
-        holder.date.text = sdf.format(Date(file.lastModified()))
-
-        if (file.isDirectory) {
-            holder.icon.setImageResource(android.R.drawable.ic_menu_gallery)
-        } else {
-            holder.icon.setImageResource(android.R.drawable.ic_menu_edit)
-        }
-
-        holder.itemView.setOnClickListener { onClick(file) }
-        
-        // 👇 INI BAGIAN UNTUK MENAMPILKAN MENU POPUP SAAT TITIK TIGA DIKLIK 👇
-        holder.options.setOnClickListener { view ->
-            val popup = PopupMenu(view.context, view)
-            popup.menu.add("Pilih")
-            popup.menu.add("Quick Share")
-            popup.menu.add("Pindahkan ke")
-            popup.menu.add("Salin ke")
-            popup.menu.add("Ganti nama")
-            popup.menu.add("Kompresi")
-            popup.menu.add("Hapus secara permanen")
-            popup.menu.add("Info folder")
-            
-            popup.setOnMenuItemClickListener { item ->
-                Toast.makeText(view.context, "Anda memilih: ${item.title}", Toast.LENGTH_SHORT).show()
-                true
-            }
-            popup.show()
-        }
-    }
-
-    override fun getItemCount(): Int = files.size
 }
 
 // ================== ADAPTER: VIDEO ==================

@@ -1,43 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="70dp"
-    android:padding="10dp"
-    android:gravity="center_vertical">
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:background="#1E1E1E">
 
-    <TextView
-        android:id="@+id/fileIcon"
-        android:text="📄"
-        android:textSize="30sp"
-        android:layout_width="52dp"
-        android:layout_height="wrap_content"/>
+    <!-- Ikon Folder/File -->
+    <ImageView
+        android:id="@+id/ivIcon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:padding="8dp"
+        android:background="#2C2C2C"
+        android:src="@android:drawable/ic_menu_gallery"
+        app:tint="#FFFFFF" />
 
+    <!-- Nama dan Tanggal -->
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_height="wrap_content">
+        android:layout_marginStart="16dp"
+        android:orientation="vertical">
 
         <TextView
-            android:id="@+id/fileName"
-            android:textStyle="bold"
-            android:textColor="@color/ux_text"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:id="@+id/tvName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nama File"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/fileInfo"
-            android:textColor="@color/ux_muted"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:id="@+id/tvDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tanggal"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp" />
     </LinearLayout>
 
-    <ImageButton
-        android:id="@+id/fileMore"
+    <!-- Titik Tiga (Opsi) -->
+    <ImageView
+        android:id="@+id/btnOptions"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="4dp"
         android:src="@android:drawable/ic_menu_more"
-        android:background="@android:color/transparent"
-        android:layout_width="42dp"
-        android:layout_height="42dp"
-        android:contentDescription="More"/>
+        app:tint="#FFFFFF" />
+
 </LinearLayout>

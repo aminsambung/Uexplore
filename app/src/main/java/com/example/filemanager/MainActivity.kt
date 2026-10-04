@@ -1,100 +1,154 @@
-package com.example.filemanager
+package com.example.uxplore // ⚠️ SESUAIKAN DENGAN NAMA PACKAGE ANDA
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.GridLayout
-import android.widget.ProgressBar
+import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var adapter: FileListAdapter
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var fileAdapter: FileAdapter
+    private val fileList = mutableListOf<File>()
+    private var currentPath: String = Environment.getExternalStorageDirectory().absolutePath
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions.entries.all { it.value }
+        if (granted) loadFiles(currentPath) 
+        else Toast.makeText(this, "Izin ditolak!", Toast.LENGTH_LONG).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        findViewById<View>(R.id.btnSearch).setOnClickListener {
-            startActivity(Intent(this, SearchActivity::class.java))
-        }
-        findViewById<View>(R.id.btnBrowse).setOnClickListener {
-            startActivity(Intent(this, FolderActivity::class.java))
-        }
-        findViewById<View>(R.id.btnFavorites).setOnClickListener {
-            android.widget.Toast.makeText(this, "Favorites coming soon", android.widget.Toast.LENGTH_SHORT).show()
-        }
+        recyclerView = findViewById(R.id.rvFiles)
+        recyclerView.layoutManager = LinearLayoutManager(this)
 
-        setupCategories()
-        setupStorage()
-        setupRecent()
+        fileAdapter = FileAdapter(fileList) { file ->
+            if (file.isDirectory) {
+                currentPath = file.absolutePath
+                loadFiles(currentPath)
+            } else {
+                Toast.makeText(this, "File: ${file.name}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        recyclerView.adapter = fileAdapter
+
+        checkPermissions()
     }
 
-    private fun setupCategories() {
-        val grid = findViewById<GridLayout>(R.id.categoryGrid)
-        val categories = listOf(
-            "Photos" to "🖼️",
-            "Videos" to "🎬",
-            "Audio" to "🎵",
-            "Documents" to "📄",
-            "Archive" to "📦",
-            "APK" to "📱"
-        )
-        val adapter = CategoryAdapter { name ->
-            android.widget.Toast.makeText(this, "$name selected", android.widget.Toast.LENGTH_SHORT).show()
+    private fun checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                intent.data = Uri.parse("package:$packageName")
+                startActivity(intent)
+            } else {
+                loadFiles(currentPath)
+            }
+        } else {
+            val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            val notGranted = permissions.filter {
+                ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+            }
+            if (notGranted.isNotEmpty()) requestPermissionLauncher.launch(notGranted.toTypedArray())
+            else loadFiles(currentPath)
         }
-        categories.forEach { adapter.add(grid, it.first, it.second) }
     }
 
-    private fun setupStorage() {
-        val stat = android.os.StatFs(Environment.getDataDirectory().path)
-        val total = stat.totalBytes
-        val free = stat.availableBytes
-        val used = total - free
-        val percent = if (total > 0) (used * 100 / total).toInt() else 0
+    private fun loadFiles(path: String) {
+        try {
+            val directory = File(path)
+            val files = directory.listFiles()
+            fileList.clear()
 
-        findViewById<ProgressBar>(R.id.storageProgress).progress = percent
-        findViewById<TextView>(R.id.storageText).text =
-            "${FileUtils.formatSize(used)} used • ${FileUtils.formatSize(total)} total"
-    }
+            if (files != null) {
+                val folders = files.filter { it.isDirectory }.sortedBy { it.name.lowercase() }
+                val normalFiles = files.filter { it.isFile }.sortedBy { it.name.lowercase() }
+                fileList.addAll(folders)
+                fileList.addAll(normalFiles)
+            }
+            fileAdapter.notifyDataSetChanged()
+            findViewById<TextView>(R.id.tvTitle).text = directory.name
 
-    private fun setupRecent() {
-        val root = Environment.getExternalStorageDirectory()
-        val items = root.listFiles()?.sortedByDescending { it.lastModified() }
-            ?.take(12)
-            ?.map { FileItem(it.name, it.absolutePath, if (it.isFile) it.length() else 0, it.isDirectory) }
-            ?: emptyList()
-
-        adapter = FileListAdapter(
-            items,
-            onClick = { item ->
-                if (item.isDirectory) {
-                    startActivity(Intent(this, FolderActivity::class.java).putExtra("path", item.path))
-                } else if (item.name.lowercase().matches(Regex(".*\\.(jpg|jpeg|png|webp|gif)$"))) {
-                    startActivity(Intent(this, PreviewActivity::class.java).putExtra("path", item.path))
-                }
-            },
-            onMore = { item, view -> showActions(item, view) }
-        )
-        findViewById<RecyclerView>(R.id.fileRecycler).layoutManager = LinearLayoutManager(this)
-        findViewById<RecyclerView>(R.id.fileRecycler).adapter = adapter
-    }
-
-    private fun showActions(item: FileItem, anchor: View) {
-        val popup = android.widget.PopupMenu(this, anchor)
-        popup.menu.add("Share")
-        popup.menu.add("Rename")
-        popup.menu.add("Delete")
-        popup.menu.add("Details")
-        popup.setOnMenuItemClickListener {
-            android.widget.Toast.makeText(this, "${it.title}: ${item.name}", android.widget.Toast.LENGTH_SHORT).show()
-            true
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-        popup.show()
     }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        val parent = File(currentPath).parentFile
+        if (parent != null && parent.exists() && currentPath != Environment.getExternalStorageDirectory().absolutePath) {
+            currentPath = parent.absolutePath
+            loadFiles(currentPath)
+        } else {
+            super.onBackPressed()
+        }
+    }
+}
+
+// ================== ADAPTER ==================
+class FileAdapter(
+    private val files: List<File>,
+    private val onClick: (File) -> Unit
+) : RecyclerView.Adapter<FileAdapter.FileViewHolder>() {
+
+    class FileViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val icon: ImageView = view.findViewById(R.id.ivIcon)
+        val name: TextView = view.findViewById(R.id.tvName)
+        val date: TextView = view.findViewById(R.id.tvDate)
+        val options: ImageView = view.findViewById(R.id.btnOptions)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_file, parent, false)
+        return FileViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
+        val file = files[position]
+        holder.name.text = file.name
+
+        // Format Tanggal (Contoh: 26 Apr)
+        val sdf = SimpleDateFormat("dd MMM", Locale("id", "ID"))
+        val dateString = sdf.format(Date(file.lastModified()))
+        holder.date.text = dateString
+
+        // Ikon (Sementara pakai folder untuk semua, nanti bisa dikembangkan)
+        if (file.isDirectory) {
+            holder.icon.setImageResource(android.R.drawable.ic_menu_gallery)
+        } else {
+            holder.icon.setImageResource(android.R.drawable.ic_menu_edit)
+        }
+
+        holder.itemView.setOnClickListener { onClick(file) }
+        holder.options.setOnClickListener {
+            Toast.makeText(holder.itemView.context, "Opsi: ${file.name}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun getItemCount(): Int = files.size
 }

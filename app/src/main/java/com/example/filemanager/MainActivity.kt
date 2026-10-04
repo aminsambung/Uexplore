@@ -34,13 +34,11 @@ class MainActivity : AppCompatActivity() {
     private val fileList = mutableListOf<File>()
     private var currentPath: String = Environment.getExternalStorageDirectory().absolutePath
 
-    // Variabel untuk Halaman Video
-    private lateinit var rvVideos: RecyclerView
+    // Variabel untuk Halaman Video (Belum dipakai, tapi disiapkan)
     private lateinit var videoAdapter: VideoAdapter
     private val videoList = mutableListOf<File>()
 
-    // Variabel untuk Halaman Gambar
-    private lateinit var rvImages: RecyclerView
+    // Variabel untuk Halaman Gambar (Belum dipakai, tapi disiapkan)
     private lateinit var galleryAdapter: GalleryAdapter
     private val imageList = mutableListOf<File>()
 
@@ -59,22 +57,23 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ⚠️ PILIH SALAH SATU SKENARIO DI BAWAH INI:
-
-        // --- SKENARIO 1: PENYIMPANAN INTERNAL (Sesuai Gambar Anda) ---
+        // ==========================================
+        // ⚠️ SKENARIO 1: PENYIMPANAN INTERNAL (AKTIF)
+        // ==========================================
         setContentView(R.layout.activity_main)
         initStorageViews()
-        // --- AKHIR SKENARIO 1 ---
 
-        // --- SKENARIO 2: VIDEO ---
+        // ==========================================
+        // SKENARIO 2: VIDEO (NONAKTIF - Beri komentar)
+        // ==========================================
         // setContentView(R.layout.activity_video)
         // initVideoViews()
-        // --- AKHIR SKENARIO 2 ---
 
-        // --- SKENARIO 3: GAMBAR ---
+        // ==========================================
+        // SKENARIO 3: GAMBAR (NONAKTIF - Beri komentar)
+        // ==========================================
         // setContentView(R.layout.activity_gallery)
         // initGalleryViews()
-        // --- AKHIR SKENARIO 3 ---
 
         // Cek Izin
         checkPermissions()
@@ -83,7 +82,7 @@ class MainActivity : AppCompatActivity() {
     // ================== INISIALISASI TAMPILAN ==================
 
     private fun initStorageViews() {
-        rvFiles = findViewById(R.id.rvFiles)
+        rvFiles = findViewById(R.id.rvFiles) // Pastikan ID ini ada di layout activity_main.xml
         rvFiles.layoutManager = LinearLayoutManager(this)
         fileAdapter = FileListAdapter(
             items = fileList,
@@ -102,8 +101,9 @@ class MainActivity : AppCompatActivity() {
         rvFiles.adapter = fileAdapter
     }
 
+    // Fungsi ini BELUM dipakai karena layout video belum aktif
     private fun initVideoViews() {
-        rvVideos = findViewById(R.id.rvVideos)
+        val rvVideos = findViewById<RecyclerView>(R.id.rvVideos)
         rvVideos.layoutManager = GridLayoutManager(this, 2)
         videoAdapter = VideoAdapter(videoList) { file ->
             Toast.makeText(this, "Video: ${file.name}", Toast.LENGTH_SHORT).show()
@@ -111,8 +111,9 @@ class MainActivity : AppCompatActivity() {
         rvVideos.adapter = videoAdapter
     }
 
+    // Fungsi ini BELUM dipakai karena layout galeri belum aktif
     private fun initGalleryViews() {
-        rvImages = findViewById(R.id.rvImages)
+        val rvImages = findViewById<RecyclerView>(R.id.rvImages)
         rvImages.layoutManager = GridLayoutManager(this, 3)
         galleryAdapter = GalleryAdapter(imageList) { file ->
             Toast.makeText(this, "Gambar: ${file.name}", Toast.LENGTH_SHORT).show()
@@ -148,10 +149,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitialData() {
-        // Aktifkan sesuai skenario
+        // Aktifkan sesuai skenario yang dipilih
         loadFiles(currentPath)
-        // loadVideos()
-        // loadImages()
+        // loadVideos() // ⛔ Nonaktif
+        // loadImages() // ⛔ Nonaktif
     }
 
     // ================== LOGIKA PENYIMPANAN INTERNAL ==================

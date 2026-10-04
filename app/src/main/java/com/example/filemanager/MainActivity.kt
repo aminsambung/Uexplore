@@ -1,43 +1,183 @@
 package com.example.uxplore // ⚠️ SESUAIKAN DENGAN NAMA PACKAGE ANDA
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 import java.io.File
+import java.text.DecimalFormat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_video) // ⚠️ Kita pakai layout Video
+    // Variabel untuk Halaman Penyimpanan Internal
+    private lateinit var rvFiles: RecyclerView
+    private lateinit var fileAdapter: FileAdapter
+    private val fileList = mutableListOf<File>()
+    private var currentPath: String = Environment.getExternalStorageDirectory().absolutePath
 
-        val rvVideos = findViewById<RecyclerView>(R.id.rvVideos)
-        
-        // Menggunakan GridLayoutManager dengan 2 kolom
-        rvVideos.layoutManager = GridLayoutManager(this, 2)
+    // Variabel untuk Halaman Video
+    private lateinit var rvVideos: RecyclerView
+    private lateinit var videoAdapter: VideoAdapter
+    private val videoList = mutableListOf<File>()
 
-        // Cek Izin
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            // Minta izin MANAGE_EXTERNAL_STORAGE (kode lengkapnya ada di jawaban sebelumnya)
+    // Variabel untuk Halaman Gambar
+    private lateinit var rvImages: RecyclerView
+    private lateinit var galleryAdapter: GalleryAdapter
+    private val imageList = mutableListOf<File>()
+
+    // Launcher Izin
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions.entries.all { it.value }
+        if (granted) {
+            loadInitialData()
         } else {
-            // Ambil daftar video dari penyimpanan
-            val videoFiles = getVideoFiles()
-            val adapter = VideoAdapter(videoFiles) { file ->
-                // Aksi saat video diklik
-            }
-            rvVideos.adapter = adapter
+            Toast.makeText(this, "Izin penyimpanan ditolak!", Toast.LENGTH_LONG).show()
         }
     }
 
-    // Fungsi untuk mencari semua file video di HP
-    private fun getVideoFiles(): List<File> {
-        val videoList = mutableListOf<File>()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // ⚠️ Ganti layout ini sesuai halaman yang ingin ditampilkan pertama kali.
+        // Gunakan R.layout.activity_main untuk Home, R.layout.activity_video untuk Video, dll.
+        setContentView(R.layout.activity_main) 
+
+        // Inisialisasi Tampilan Home (Jika layout yang dipakai adalah activity_main)
+        // initHomeViews()
+
+        // Inisialisasi Tampilan Penyimpanan Internal (Jika layout yang dipakai adalah activity_main dengan RecyclerView)
+        initStorageViews()
+
+        // Inisialisasi Tampilan Video (Jika layout yang dipakai adalah activity_video)
+        // initVideoViews()
+
+        // Inisialisasi Tampilan Gambar (Jika layout yang dipakai adalah activity_gallery)
+        // initGalleryViews()
+
+        // Cek Izin
+        checkPermissions()
+    }
+
+    // ================== INISIALISASI TAMPILAN ==================
+
+    private fun initStorageViews() {
+        rvFiles = findViewById(R.id.rvFiles) // Pastikan ID ini ada di layout Anda
+        rvFiles.layoutManager = LinearLayoutManager(this)
+        fileAdapter = FileAdapter(fileList) { file ->
+            if (file.isDirectory) {
+                currentPath = file.absolutePath
+                loadFiles(currentPath)
+            } else {
+                Toast.makeText(this, "File: ${file.name}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        rvFiles.adapter = fileAdapter
+    }
+
+    private fun initVideoViews() {
+        rvVideos = findViewById(R.id.rvVideos)
+        rvVideos.layoutManager = GridLayoutManager(this, 2)
+        videoAdapter = VideoAdapter(videoList) { file ->
+            Toast.makeText(this, "Video: ${file.name}", Toast.LENGTH_SHORT).show()
+        }
+        rvVideos.adapter = videoAdapter
+    }
+
+    private fun initGalleryViews() {
+        rvImages = findViewById(R.id.rvImages)
+        rvImages.layoutManager = GridLayoutManager(this, 3)
+        galleryAdapter = GalleryAdapter(imageList) { file ->
+            Toast.makeText(this, "Gambar: ${file.name}", Toast.LENGTH_SHORT).show()
+        }
+        rvImages.adapter = galleryAdapter
+    }
+
+    // ================== IZIN & PEMUATAN DATA ==================
+
+    private fun checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                intent.data = Uri.parse("package:$packageName")
+                startActivity(intent)
+            } else {
+                loadInitialData()
+            }
+        } else {
+            val permissions = arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+            val notGranted = permissions.filter {
+                ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+            }
+            if (notGranted.isNotEmpty()) {
+                requestPermissionLauncher.launch(notGranted.toTypedArray())
+            } else {
+                loadInitialData()
+            }
+        }
+    }
+
+    private fun loadInitialData() {
+        // Panggil fungsi pemuatan data sesuai halaman yang aktif
+        // loadFiles(currentPath) // Untuk Penyimpanan Internal
+        // loadVideos()           // Untuk Video
+        // loadImages()           // Untuk Gambar
+    }
+
+    // ================== LOGIKA PENYIMPANAN INTERNAL ==================
+
+    private fun loadFiles(path: String) {
+        try {
+            val directory = File(path)
+            val files = directory.listFiles()
+            fileList.clear()
+
+            if (files != null) {
+                val folders = files.filter { it.isDirectory && !it.name.startsWith(".") }
+                    .sortedBy { it.name.lowercase() }
+                val normalFiles = files.filter { it.isFile && !it.name.startsWith(".") }
+                    .sortedBy { it.name.lowercase() }
+                
+                fileList.addAll(folders)
+                fileList.addAll(normalFiles)
+            }
+            fileAdapter.notifyDataSetChanged()
+            findViewById<TextView>(R.id.tvTitle)?.text = directory.name
+
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ================== LOGIKA VIDEO ==================
+
+    private fun loadVideos() {
+        videoList.clear()
         val root = Environment.getExternalStorageDirectory()
         val extensions = arrayOf("mp4", "mkv", "avi", "3gp", "webm")
 
@@ -45,15 +185,171 @@ class MainActivity : AppCompatActivity() {
             val files = dir.listFiles() ?: return
             for (file in files) {
                 if (file.isDirectory) {
-                    searchVideos(file)
+                    if (!file.name.startsWith(".")) { // Lewati folder tersembunyi
+                        searchVideos(file)
+                    }
                 } else {
                     if (extensions.any { file.extension.equals(it, ignoreCase = true) }) {
-                        videoList.add(file)
+                        if (!file.name.startsWith(".")) { // Lewati file tersembunyi
+                            videoList.add(file)
+                        }
                     }
                 }
             }
         }
         searchVideos(root)
-        return videoList
+        videoAdapter.notifyDataSetChanged()
     }
+
+    // ================== LOGIKA GAMBAR ==================
+
+    private fun loadImages() {
+        imageList.clear()
+        val root = Environment.getExternalStorageDirectory()
+        val extensions = arrayOf("jpg", "jpeg", "png", "gif", "webp", "bmp")
+
+        fun searchImages(dir: File) {
+            val files = dir.listFiles() ?: return
+            for (file in files) {
+                if (file.isDirectory) {
+                    if (!file.name.startsWith(".")) { // Lewati folder tersembunyi
+                        searchImages(file)
+                    }
+                } else {
+                    if (extensions.any { file.extension.equals(it, ignoreCase = true) }) {
+                        if (!file.name.startsWith(".")) { // Lewati file tersembunyi
+                            imageList.add(file)
+                        }
+                    }
+                }
+            }
+        }
+        searchImages(root)
+        galleryAdapter.notifyDataSetChanged()
+    }
+
+    // ================== TOMBOL BACK ==================
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        val parent = File(currentPath).parentFile
+        if (parent != null && parent.exists() && currentPath != Environment.getExternalStorageDirectory().absolutePath) {
+            currentPath = parent.absolutePath
+            loadFiles(currentPath)
+        } else {
+            super.onBackPressed()
+        }
+    }
+}
+
+// ================== ADAPTER: FILE (PENYIMPANAN INTERNAL) ==================
+class FileAdapter(
+    private val files: List<File>,
+    private val onClick: (File) -> Unit
+) : RecyclerView.Adapter<FileAdapter.FileViewHolder>() {
+
+    class FileViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val icon: ImageView = view.findViewById(R.id.ivIcon)
+        val name: TextView = view.findViewById(R.id.tvName)
+        val date: TextView = view.findViewById(R.id.tvDate)
+        val options: ImageView = view.findViewById(R.id.btnOptions)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_file, parent, false)
+        return FileViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
+        val file = files[position]
+        holder.name.text = file.name
+
+        val sdf = SimpleDateFormat("dd MMM", Locale("id", "ID"))
+        holder.date.text = sdf.format(Date(file.lastModified()))
+
+        if (file.isDirectory) {
+            holder.icon.setImageResource(android.R.drawable.ic_menu_gallery)
+        } else {
+            holder.icon.setImageResource(android.R.drawable.ic_menu_edit)
+        }
+
+        holder.itemView.setOnClickListener { onClick(file) }
+        holder.options.setOnClickListener {
+            Toast.makeText(holder.itemView.context, "Opsi: ${file.name}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun getItemCount(): Int = files.size
+}
+
+// ================== ADAPTER: VIDEO ==================
+class VideoAdapter(
+    private val videoList: List<File>,
+    private val onClick: (File) -> Unit
+) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
+
+    class VideoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val thumbnail: ImageView = view.findViewById(R.id.ivThumbnail)
+        val size: TextView = view.findViewById(R.id.tvSize)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_video, parent, false)
+        return VideoViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
+        val videoFile = videoList[position]
+        Glide.with(holder.itemView.context).load(videoFile).into(holder.thumbnail)
+        holder.size.text = formatFileSize(videoFile.length())
+        holder.itemView.setOnClickListener { onClick(videoFile) }
+    }
+
+    override fun getItemCount(): Int = videoList.size
+}
+
+// ================== ADAPTER: GAMBAR ==================
+class GalleryAdapter(
+    private val imageList: List<File>,
+    private val onClick: (File) -> Unit
+) : RecyclerView.Adapter<GalleryAdapter.GalleryViewHolder>() {
+
+    class GalleryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val thumbnail: ImageView = view.findViewById(R.id.ivThumbnail)
+        val size: TextView = view.findViewById(R.id.tvSize)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GalleryViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_gallery, parent, false)
+        return GalleryViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: GalleryViewHolder, position: Int) {
+        val imageFile = imageList[position]
+        holder.size.text = formatFileSize(imageFile.length())
+
+        val requestOptions = RequestOptions()
+            .centerCrop()
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .override(300, 300)
+            .placeholder(android.R.drawable.ic_menu_gallery)
+            .error(android.R.drawable.ic_menu_report_image)
+
+        Glide.with(holder.itemView.context)
+            .load(imageFile)
+            .apply(requestOptions)
+            .into(holder.thumbnail)
+
+        holder.itemView.setOnClickListener { onClick(imageFile) }
+    }
+
+    override fun getItemCount(): Int = imageList.size
+}
+
+// ================== FUNGSI UTILITAS ==================
+private fun formatFileSize(size: Long): String {
+    if (size <= 0) return "0 B"
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
+    return DecimalFormat("#,##0.##").format(size / Math.pow(1024.0, digitGroups.toDouble())) + " " + units[digitGroups]
 }

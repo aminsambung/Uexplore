@@ -17,7 +17,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -33,14 +32,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fileAdapter: FileListAdapter
     private val fileList = mutableListOf<File>()
     private var currentPath: String = Environment.getExternalStorageDirectory().absolutePath
-
-    // Variabel untuk Halaman Video (Belum dipakai, tapi disiapkan)
-    private lateinit var videoAdapter: VideoAdapter
-    private val videoList = mutableListOf<File>()
-
-    // Variabel untuk Halaman Gambar (Belum dipakai, tapi disiapkan)
-    private lateinit var galleryAdapter: GalleryAdapter
-    private val imageList = mutableListOf<File>()
 
     // Launcher Izin
     private val requestPermissionLauncher = registerForActivityResult(
@@ -58,22 +49,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // ==========================================
-        // ⚠️ SKENARIO 1: PENYIMPANAN INTERNAL (AKTIF)
+        // SKENARIO: PENYIMPANAN INTERNAL (AKTIF)
         // ==========================================
         setContentView(R.layout.activity_main)
         initStorageViews()
-
-        // ==========================================
-        // SKENARIO 2: VIDEO (NONAKTIF - Beri komentar)
-        // ==========================================
-        // setContentView(R.layout.activity_video)
-        // initVideoViews()
-
-        // ==========================================
-        // SKENARIO 3: GAMBAR (NONAKTIF - Beri komentar)
-        // ==========================================
-        // setContentView(R.layout.activity_gallery)
-        // initGalleryViews()
 
         // Cek Izin
         checkPermissions()
@@ -82,7 +61,7 @@ class MainActivity : AppCompatActivity() {
     // ================== INISIALISASI TAMPILAN ==================
 
     private fun initStorageViews() {
-        rvFiles = findViewById(R.id.rvFiles) // Pastikan ID ini ada di layout activity_main.xml
+        rvFiles = findViewById(R.id.rvFiles)
         rvFiles.layoutManager = LinearLayoutManager(this)
         fileAdapter = FileListAdapter(
             items = fileList,
@@ -99,26 +78,6 @@ class MainActivity : AppCompatActivity() {
             }
         )
         rvFiles.adapter = fileAdapter
-    }
-
-    // Fungsi ini BELUM dipakai karena layout video belum aktif
-    private fun initVideoViews() {
-        val rvVideos = findViewById<RecyclerView>(R.id.rvVideos)
-        rvVideos.layoutManager = GridLayoutManager(this, 2)
-        videoAdapter = VideoAdapter(videoList) { file ->
-            Toast.makeText(this, "Video: ${file.name}", Toast.LENGTH_SHORT).show()
-        }
-        rvVideos.adapter = videoAdapter
-    }
-
-    // Fungsi ini BELUM dipakai karena layout galeri belum aktif
-    private fun initGalleryViews() {
-        val rvImages = findViewById<RecyclerView>(R.id.rvImages)
-        rvImages.layoutManager = GridLayoutManager(this, 3)
-        galleryAdapter = GalleryAdapter(imageList) { file ->
-            Toast.makeText(this, "Gambar: ${file.name}", Toast.LENGTH_SHORT).show()
-        }
-        rvImages.adapter = galleryAdapter
     }
 
     // ================== IZIN & PEMUATAN DATA ==================
@@ -149,10 +108,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitialData() {
-        // Aktifkan sesuai skenario yang dipilih
         loadFiles(currentPath)
-        // loadVideos() // ⛔ Nonaktif
-        // loadImages() // ⛔ Nonaktif
     }
 
     // ================== LOGIKA PENYIMPANAN INTERNAL ==================
@@ -178,52 +134,6 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    // ================== LOGIKA VIDEO ==================
-
-    private fun loadVideos() {
-        videoList.clear()
-        val root = Environment.getExternalStorageDirectory()
-        val extensions = arrayOf("mp4", "mkv", "avi", "3gp", "webm")
-
-        fun searchVideos(dir: File) {
-            val files = dir.listFiles() ?: return
-            for (file in files) {
-                if (file.isDirectory) {
-                    if (!file.name.startsWith(".")) searchVideos(file)
-                } else {
-                    if (extensions.any { file.extension.equals(it, ignoreCase = true) }) {
-                        if (!file.name.startsWith(".")) videoList.add(file)
-                    }
-                }
-            }
-        }
-        searchVideos(root)
-        videoAdapter.notifyDataSetChanged()
-    }
-
-    // ================== LOGIKA GAMBAR ==================
-
-    private fun loadImages() {
-        imageList.clear()
-        val root = Environment.getExternalStorageDirectory()
-        val extensions = arrayOf("jpg", "jpeg", "png", "gif", "webp", "bmp")
-
-        fun searchImages(dir: File) {
-            val files = dir.listFiles() ?: return
-            for (file in files) {
-                if (file.isDirectory) {
-                    if (!file.name.startsWith(".")) searchImages(file)
-                } else {
-                    if (extensions.any { file.extension.equals(it, ignoreCase = true) }) {
-                        if (!file.name.startsWith(".")) imageList.add(file)
-                    }
-                }
-            }
-        }
-        searchImages(root)
-        galleryAdapter.notifyDataSetChanged()
     }
 
     // ================== TOMBOL BACK ==================
